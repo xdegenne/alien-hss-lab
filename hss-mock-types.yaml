@@ -1,0 +1,240 @@
+tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
+
+template_name: mapr-splitted-types
+template_author: FastConnect
+template_version: 1.2-SNAPSHOT
+
+imports:
+  - tosca-normative-types:1.0.0.wd03-SNAPSHOT
+
+description: MapR components for HSS (Hadoop Self Service)
+
+node_types:
+  fastconnect.nodes.MapRCore:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      This is the core of MapR
+    tags:
+      icon: /images/mapr.jpg
+    capabilities:
+      mapr_core_endpoint:
+        type: fastconnect.capabilities.MapR_Core_Endpoint
+        upper_bound: unbounded
+    interfaces:
+      Standard:
+        create:
+          implementation: scripts/core/create.sh
+        configure:
+          implementation: scripts/core/configure.sh
+        start:
+          implementation: scripts/core/start.sh
+        stop:
+          implementation: scripts/core/stop.sh
+        delete:
+          implementation: scripts/core/delete.sh
+        post_start:
+          implementation: scripts/core/post_start.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+  fastconnect.nodes.MapRZookeeper:
+    derived_from: tosca.nodes.Root
+    description: >
+      This is the MapRZookeeper which has to be hosted on a MapRCore
+    tags:
+      icon: /images/zookeeper.gif
+    capabilities:
+      mapr_zk_endpoint:
+        type: fastconnect.capabilities.MapR_ZK_Endpoint
+        upper_bound: unbounded
+    requirements:
+      - MapR_Hosted_On_Core: fastconnect.capabilities.MapR_Core_Endpoint
+        type: fastconnect.relationships.MapR_Hosted_On_Core
+        lower_bound: 1
+        upper_bound: 1
+    interfaces:
+      fastconnect.mapr.custom:
+        configure:
+          implementation: scripts/zk/custom_configure.sh
+        do_something:
+          implementation: scripts/zk/custom_do_something.sh
+      Standard:
+        create:
+          implementation: scripts/zk/create.sh
+        configure:
+          implementation: scripts/zk/configure.sh
+          inputs:
+            ip_address: { get_attribute: [HOST, ip_address] }
+        start:
+          implementation: scripts/zk/start.sh
+        stop:
+          implementation: scripts/zk/stop.sh
+        delete:
+          implementation: scripts/zk/delete.sh
+        post_start:
+          implementation: scripts/zk/post_start.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+  fastconnect.nodes.MapRWarden:
+    derived_from: tosca.nodes.Root
+    description: >
+      This is the warden of MapR
+    tags:
+      icon: /images/warden.jpg
+    capabilities:
+      mapr_warden_endpoint:
+        type: fastconnect.capabilities.MapR_Warden_Endpoint
+        upper_bound: unbounded
+    requirements:
+      - MapR_Hosted_On_Core: fastconnect.capabilities.MapR_Core_Endpoint
+        type: fastconnect.relationships.MapR_Hosted_On_Core
+        lower_bound: 1
+        upper_bound: 1
+      - MapR_Warden_ConnectsTo_ZK: fastconnect.capabilities.MapR_ZK_Endpoint
+        type: fastconnect.relationships.MapR_ConnectsTo_ZK
+        lower_bound: 0
+        upper_bound: unbounded
+      - MapR_Warden_ConnectsTo_Warden: fastconnect.capabilities.MapR_Warden_Endpoint
+        type: fastconnect.relationships.MapR_ConnectsTo_Warden
+        lower_bound: 0
+        upper_bound: unbounded
+    interfaces:
+      Standard:
+        create:
+          implementation: scripts/warden/create.sh
+        configure:
+          implementation: scripts/warden/configure.sh
+        start:
+          implementation: scripts/warden/start.sh
+        stop:
+          implementation: scripts/warden/stop.sh
+        delete:
+          implementation: scripts/warden/delete.sh
+        post_start:
+          implementation: scripts/warden/post_start.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+
+relationship_types:
+
+  fastconnect.relationships.MapR_ConnectsTo_ZK:
+    derived_from: tosca.relationships.ConnectsTo
+    description: Register ZK
+    valid_sources: [  fastconnect.capabilities.MapR_Warden_Endpoint ]
+    valid_targets: [ fastconnect.capabilities.MapR_ZK_Endpoint ]
+    interfaces:
+      Configure:
+        pre_configure_source:
+          implementation: scripts/connectToZK/pre_configure_source.sh
+        pre_configure_target:
+          implementation: scripts/connectToZK/pre_configure_target.sh
+        post_configure_source:
+          implementation: scripts/connectToZK/post_configure_source.sh
+        post_configure_target:
+          implementation: scripts/connectToZK/post_configure_target.sh
+        add_target:
+          implementation: scripts/connectToZK/add_target.sh
+        add_source:
+          implementation: scripts/connectToZK/add_source.sh
+        remove_target:
+          implementation: scripts/connectToZK/remove_target.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+
+  fastconnect.relationships.MapR_ConnectsTo_Warden:
+    derived_from: tosca.relationships.ConnectsTo
+    description: Register to Warden
+    valid_sources: [ fastconnect.capabilities.MapR_Warden_Endpoint ]
+    valid_targets: [ fastconnect.capabilities.MapR_Warden_Endpoint ]
+    interfaces:
+      Configure:
+        pre_configure_source:
+          implementation: scripts/connectToWarden/pre_configure_source.sh
+        pre_configure_target:
+          implementation: scripts/connectToWarden/pre_configure_target.sh
+        post_configure_source:
+          implementation: scripts/connectToWarden/post_configure_source.sh
+        post_configure_target:
+          implementation: scripts/connectToWarden/post_configure_target.sh
+        add_target:
+          implementation: scripts/connectToWarden/add_target.sh
+        add_source:
+          implementation: scripts/connectToWarden/add_source.sh
+        remove_target:
+          implementation: scripts/connectToWarden/remove_target.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+
+  fastconnect.relationships.MapR_Hosted_On_Core:
+    derived_from: tosca.relationships.HostedOn
+    description: Host Software on Mapr Core
+    valid_sources: [ fastconnect.capabilities.MapR_ZK_Endpoint ]
+    valid_targets: [ fastconnect.capabilities.MapR_Core_Endpoint ]
+    interfaces:
+      Configure:
+        pre_configure_source:
+          implementation: scripts/hostedOnCore/pre_configure_source.sh
+        pre_configure_target:
+          implementation: scripts/hostedOnCore/pre_configure_target.sh
+        post_configure_source:
+          implementation: scripts/hostedOnCore/post_configure_source.sh
+        post_configure_target:
+          implementation: scripts/hostedOnCore/post_configure_target.sh
+        add_target:
+          implementation: scripts/hostedOnCore/add_target.sh
+          inputs:
+            a4c_lab_ip: { get_attribute: [SOURCE, ip_address] }          
+        add_source:
+          implementation: scripts/hostedOnCore/add_source.sh
+        remove_target:
+          implementation: scripts/hostedOnCore/remove_target.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+
+  fastconnect.relationships.MapR_Hosted_On_Warden:
+    derived_from: tosca.relationships.HostedOn
+    description: Host Software on Mapr Warden
+    valid_targets: [ fastconnect.capabilities.MapR_Warden_Endpoint ]
+    interfaces:
+      Configure:
+        pre_configure_source:
+          implementation: scripts/hostedOnWarden/pre_configure_source.sh
+        pre_configure_target:
+          implementation: scripts/hostedOnWarden/pre_configure_target.sh
+        post_configure_source:
+          implementation: scripts/hostedOnWarden/post_configure_source.sh
+        post_configure_target:
+          implementation: scripts/hostedOnWarden/post_configure_target.sh
+        add_target:
+          implementation: scripts/hostedOnWarden/add_target.sh
+        add_source:
+          implementation: scripts/hostedOnWarden/add_source.sh
+        remove_target:
+          implementation: scripts/hostedOnWarden/remove_target.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+
+capability_types:
+  fastconnect.capabilities.MapR_Endpoint:
+    derived_from: tosca.capabilities.Root
+    description: Register any "slave node" to this "master node"
+  fastconnect.capabilities.MapR_Core_Endpoint:
+    derived_from: tosca.capabilities.Root
+    description: Allow components to be hosted on Core
+  fastconnect.capabilities.MapR_ZK_Endpoint:
+    derived_from: tosca.capabilities.Root
+    description: ZK endpoint
+  fastconnect.capabilities.MapR_Warden_Endpoint:
+    derived_from: tosca.capabilities.Root
+    description: Warden endpoint
+
+artifact_types:
+  tosca.artifacts.GroovyScript:
+    description: A groovy script (.groovy file)
+    file_ext: [groovy]
