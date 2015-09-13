@@ -53,11 +53,6 @@ node_types:
         lower_bound: 1
         upper_bound: 1
     interfaces:
-      fastconnect.mapr.custom:
-        configure:
-          implementation: scripts/zk/custom_configure.sh
-        do_something:
-          implementation: scripts/zk/custom_do_something.sh
       Standard:
         create:
           implementation: scripts/zk/create.sh
@@ -100,6 +95,11 @@ node_types:
         lower_bound: 0
         upper_bound: unbounded
     interfaces:
+      fastconnect.mapr.custom:
+        welcome:
+          implementation: scripts/warden/custom_welcome.sh
+        exit:
+          implementation: scripts/warden/custom_exit.sh
       Standard:
         create:
           implementation: scripts/warden/create.sh
@@ -187,7 +187,7 @@ relationship_types:
         add_target:
           implementation: scripts/hostedOnCore/add_target.sh
           inputs:
-            a4c_lab_ip: { get_attribute: [SOURCE, ip_address] }          
+            a4c_lab_ip: { get_attribute: [SOURCE, ip_address] }
         add_source:
           implementation: scripts/hostedOnCore/add_source.sh
         remove_target:

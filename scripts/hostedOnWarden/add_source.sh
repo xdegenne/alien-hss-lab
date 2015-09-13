@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "`date`: hostedOnWarden - adding source ..." >> /tmp/hss.log
-echo "`set | grep 'a4c_lab_'`" >> /tmp/hss.log
-sleep 5
-echo "`date`: hostedOnWarden - ... source added !" >> /tmp/hss.log
+echo "`date` [$$@`hostname`] -------------------------------------------------" >> /tmp/hss.log
+echo "`date` [$$@`hostname`] hostedOnWarden - add source" >> /tmp/hss.log
+for l in `set | grep a4c_`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
+sleep $[ ( $RANDOM % 9 )  + 1 ]s

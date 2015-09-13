@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "`date`: wraden - deleting ..." >> /tmp/hss.log
-echo "`set | grep 'a4c_lab_'`" >> /tmp/hss.log
-sleep 5
-echo "`date`: wraden - ... deleted !" >> /tmp/hss.log
+echo "`date` [$$@`hostname`] -------------------------------------------------" >> /tmp/hss.log
+echo "`date` [$$@`hostname`] wraden - delete" >> /tmp/hss.log
+for l in `set | grep a4c_`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
+sleep $[ ( $RANDOM % 9 )  + 1 ]s

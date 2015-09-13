@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "`date`: connectToZK - pre configuring source ..." >> /tmp/hss.log
-echo "`set | grep 'a4c_lab_'`" >> /tmp/hss.log
-sleep 5
-echo "`date`: connectToZK - ... source pre configured !" >> /tmp/hss.log
+echo "`date` [$$@`hostname`] -------------------------------------------------" >> /tmp/hss.log
+echo "`date` [$$@`hostname`] connectToZK - pre configure source" >> /tmp/hss.log
+for l in `set | grep a4c_`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
+sleep $[ ( $RANDOM % 9 )  + 1 ]s
