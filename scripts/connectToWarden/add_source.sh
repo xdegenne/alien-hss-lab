@@ -1,5 +1,5 @@
 #!/bin/bash
 echo "`date` [$$@`hostname`] -------------------------------------------------" >> /tmp/hss.log
 echo "`date` [$$@`hostname`] connectToWarden - add source" >> /tmp/hss.log
-for l in `set | grep a4c_`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
+for l in `set | egrep 'INSTANCE|NODE'`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
 sleep $[ ( $RANDOM % 9 )  + 1 ]s

@@ -6,6 +6,7 @@ template_version: 1.2-SNAPSHOT
 
 imports:
   - tosca-normative-types:1.0.0.wd03-SNAPSHOT
+  - alien-extended-storage-types:1.0-SNAPSHOT
 
 description: MapR components for HSS (Hadoop Self Service)
 
@@ -116,6 +117,47 @@ node_types:
     artifacts:
       - scripts: scripts
         type: tosca.artifacts.File
+  fastconnect.nodes.MaprBlockStorage:
+    derived_from: tosca.nodes.BlockStorage
+    description: A volume.
+    capabilities:
+      volume:
+        type: fastconnect.capabilities.Volume
+        upper_bound: unbounded
+    tags:
+      icon: /images/volume.png
+  fastconnect.nodes.MapRFS:
+    derived_from: tosca.nodes.Root
+    description: >
+      The MapR File Server component
+    tags:
+      icon: /images/mapr.jpg
+    requirements:
+      - MapR_Hosted_On_Core: fastconnect.capabilities.MapR_Core_Endpoint
+        type: fastconnect.relationships.MapR_Hosted_On_Core
+        lower_bound: 1
+        upper_bound: 1
+      - volume: fastconnect.nodes.MaprBlockStorage
+        type: fastconnect.relationships.MapR_Volume
+        lower_bound: 1
+        upper_bound: unbounded
+    interfaces:
+      Standard:
+        create:
+          implementation: scripts/maprfs/create.sh
+        configure:
+          implementation: scripts/maprfs/configure.sh
+        start:
+          implementation: scripts/maprfs/start.sh
+        stop:
+          implementation: scripts/maprfs/stop.sh
+        delete:
+          implementation: scripts/maprfs/delete.sh
+        post_start:
+          implementation: scripts/maprfs/post_start.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
 
 relationship_types:
 
@@ -220,6 +262,25 @@ relationship_types:
       - scripts: scripts
         type: tosca.artifacts.File
 
+  fastconnect.relationships.MapR_Volume:
+    derived_from: tosca.relationships.ConnectsTo
+    valid_targets: [ fastconnect.capabilities.Volume]
+    interfaces:
+      Configure:
+        pre_configure_source:
+          implementation: scripts/reliesOnVolume/pre_configure_source.sh
+          inputs:
+            VOLUME_DEVICE: { get_attribute: [TARGET, device_name] }
+        post_configure_source:
+          implementation: scripts/reliesOnVolume/post_configure_source.sh
+        add_target:
+          implementation: scripts/reliesOnVolume/add_target.sh
+        remove_target:
+          implementation: scripts/reliesOnVolume/remove_target.sh
+    artifacts:
+      - scripts: scripts
+        type: tosca.artifacts.File
+
 capability_types:
   fastconnect.capabilities.MapR_Endpoint:
     derived_from: tosca.capabilities.Root
@@ -233,6 +294,12 @@ capability_types:
   fastconnect.capabilities.MapR_Warden_Endpoint:
     derived_from: tosca.capabilities.Root
     description: Warden endpoint
+  fastconnect.capabilities.Volume:
+    derived_from: tosca.capabilities.Container
+    description: This capability is used to connect to the BlockStorage with a Software.
+  fastconnect.capabilities.MapR_FS_Endpoint:
+    derived_from: tosca.capabilities.Root
+    description: Allow components to be hosted on mapr FS
 
 artifact_types:
   tosca.artifacts.GroovyScript:

@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "`date` [$$@`hostname`] -------------------------------------------------" >> /tmp/hss.log
 echo "`date` [$$@`hostname`] Warden custom exit" >> /tmp/hss.log
-for l in `set | grep a4c_`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
+for l in `set | egrep 'INSTANCE|NODE'`; do echo "`date` [$$@`hostname`] $l" >> /tmp/hss.log; done
 echo "`date` [$$@`hostname`]" >> /tmp/hss.log
 echo "`date` [$$@`hostname`]   ____               _" >> /tmp/hss.log
 echo "`date` [$$@`hostname`]  | __ ) _   _  ___  | |" >> /tmp/hss.log
